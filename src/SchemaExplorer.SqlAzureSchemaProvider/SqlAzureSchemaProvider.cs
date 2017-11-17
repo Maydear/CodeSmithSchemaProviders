@@ -622,28 +622,27 @@ namespace SchemaExplorer
             while (reader.Read())
             {
                 bool flag = false;
-                string @string = reader.GetString("IndexName");
-                bool boolean = reader.GetBoolean("IsPrimary");
-                bool boolean2 = reader.GetBoolean("IsUnique");
-                bool boolean3 = reader.GetBoolean("IsClustered");
-                bool boolean4 = reader.GetBoolean("IgnoreDupKey");
-                bool boolean5 = reader.GetBoolean("IsHypothetical");
-                bool boolean6 = reader.GetBoolean("IsPadIndex");
-                bool boolean7 = reader.GetBoolean("IsUniqueConstraint");
-                bool boolean8 = reader.GetBoolean("IsIndex");
+                string indexName = reader.IsDBNull("IndexName") ? null : reader.GetString("IndexName");
+                bool isPrimary = reader.IsDBNull("IsPrimary") ? false : reader.GetBoolean("IsPrimary");
+                bool isUnique = reader.IsDBNull("IsUnique") ? false : reader.GetBoolean("IsUnique");
+                bool isClustered = reader.IsDBNull("IsClustered") ? false : reader.GetBoolean("IsClustered");
+                bool ignoreDupKey = reader.IsDBNull("IgnoreDupKey") ? false : reader.GetBoolean("IgnoreDupKey");
+                bool isHypothetical = reader.IsDBNull("IsHypothetical") ? false : reader.GetBoolean("IsHypothetical");
+                bool isPadIndex = reader.IsDBNull("IsPadIndex") ? false : reader.GetBoolean("IsPadIndex");
+                bool isUniqueConstraint = reader.IsDBNull("IsUniqueConstraint") ? false : reader.GetBoolean("IsUniqueConstraint");
+                bool isIndex = reader.IsDBNull("IsIndex") ? false : reader.GetBoolean("IsIndex");
                 bool flag2 = false;
-                bool boolean9 = reader.GetBoolean("NoRecompute");
-                bool boolean10 = reader.GetBoolean("IsFullTextKey");
-                bool boolean11 = reader.GetBoolean("IsTable");
-                bool boolean12 = reader.GetBoolean("IsStatistics");
-                bool boolean13 = reader.GetBoolean("IsAutoStatistics");
-                bool boolean14 = reader.GetBoolean("IsUniqueConstraint");
-                string string2 = reader.GetString("SchemaName");
-                string string3 = reader.GetString("ParentName");
-                string string4 = reader.GetString("ColumnName");
-                string key = IndexSchema.FormatFullName(string2, string3, @string);
+                bool noRecompute = reader.IsDBNull("NoRecompute") ? false : reader.GetBoolean("NoRecompute");
+                bool isFullTextKey = reader.IsDBNull("IsFullTextKey") ? false : reader.GetBoolean("IsFullTextKey");
+                bool isTable = reader.IsDBNull("IsTable") ? false : reader.GetBoolean("IsTable");
+                bool isStatistics = reader.IsDBNull("IsStatistics") ? false : reader.GetBoolean("IsStatistics");
+                bool isAutoStatistics = reader.IsDBNull("IsAutoStatistics") ? false : reader.GetBoolean("IsAutoStatistics");
+                string schemaName = reader.IsDBNull("SchemaName") ? null : reader.GetString("SchemaName");
+                string parentName = reader.IsDBNull("ParentName") ? null : reader.GetString("ParentName");
+                string columnName = reader.IsDBNull("ColumnName") ? null : reader.GetString("ColumnName");
+                string key = IndexSchema.FormatFullName(schemaName, parentName, indexName);
                 TableSchema tableSchema;
-                if (!StringArrayHelper.IsAnyNullOrEmpty(@string, string3, string4) && tables.TryGetValue(SchemaObjectBase.FormatFullName(string2, string3), out tableSchema))
+                if (!StringArrayHelper.IsAnyNullOrEmpty(indexName, parentName, columnName) && tables.TryGetValue(SchemaObjectBase.FormatFullName(schemaName, parentName), out tableSchema))
                 {
                     IndexSchema indexSchema = null;
                     if (dictionary.ContainsKey(key))
@@ -654,44 +653,44 @@ namespace SchemaExplorer
                     {
                         list.Clear();
                         list.Add(new ExtendedProperty("CS_FileGroup", reader.GetString("FileGroup"), DbType.AnsiString, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_IsFullTextKey", boolean10, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_IsTable", boolean11, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_IsStatistics", boolean12, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_IsAutoStatistics", boolean13, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_IsHypothetical", boolean5, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_IgnoreDupKey", boolean4, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_PadIndex", boolean6, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_DRIPrimaryKey", boolean, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_DRIUniqueKey", boolean7, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_DRIIndex", boolean8, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_IsFullTextKey", isFullTextKey, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_IsTable", isTable, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_IsStatistics", isStatistics, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_IsAutoStatistics", isAutoStatistics, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_IsHypothetical", isHypothetical, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_IgnoreDupKey", ignoreDupKey, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_PadIndex", isPadIndex, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_DRIPrimaryKey", isPrimary, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_DRIUniqueKey", isUniqueConstraint, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_DRIIndex", isIndex, DbType.Boolean, PropertyStateEnum.ReadOnly));
                         list.Add(new ExtendedProperty("CS_DropExist", flag2, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_NoRecompute", boolean9, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                        list.Add(new ExtendedProperty("CS_IsConstraint", boolean14, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_NoRecompute", noRecompute, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                        list.Add(new ExtendedProperty("CS_IsConstraint", isUniqueConstraint, DbType.Boolean, PropertyStateEnum.ReadOnly));
                         list.Add(new ExtendedProperty("CS_OrigFillFactor", reader.GetByte("FillFactor"), DbType.Byte, PropertyStateEnum.ReadOnly));
-                        indexSchema = new IndexSchema(tableSchema, @string, boolean, boolean2, boolean3, list.ToArray());
+                        indexSchema = new IndexSchema(tableSchema, indexName, isPrimary, isUnique, isClustered, list.ToArray());
                         dictionary.Add(key, indexSchema);
                         flag = true;
                     }
                     list.Clear();
                     list.Add(new ExtendedProperty("CS_IsDescending", reader.GetBoolean("IsDescending"), DbType.Boolean, PropertyStateEnum.ReadOnly));
                     list.Add(new ExtendedProperty("CS_IsComputed", reader.GetBoolean("IsComputed"), DbType.Boolean, PropertyStateEnum.ReadOnly));
-                    MemberColumnSchema memberColumnSchema = new MemberColumnSchema(tableSchema.Columns[string4], list.ToArray());
+                    MemberColumnSchema memberColumnSchema = new MemberColumnSchema(tableSchema.Columns[columnName], list.ToArray());
                     indexSchema.MemberColumns.Add(memberColumnSchema);
                     if (populateTable)
                     {
-                        if (!tableSchema.Indexes.Contains(@string))
+                        if (!tableSchema.Indexes.Contains(indexName))
                         {
                             tableSchema.Indexes.Add(indexSchema);
                         }
-                        if (boolean)
+                        if (isPrimary)
                         {
                             if (flag)
                             {
                                 list.Clear();
                                 list.Add(new ExtendedProperty("CS_FileGroup", reader.GetString("FileGroup"), DbType.AnsiString, PropertyStateEnum.ReadOnly));
-                                list.Add(new ExtendedProperty("CS_IsClustered", boolean3, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                                list.Add(new ExtendedProperty("CS_IsClustered", isClustered, DbType.Boolean, PropertyStateEnum.ReadOnly));
                                 list.Add(new ExtendedProperty("CS_OrigFillFactor", reader.GetByte("FillFactor"), DbType.Byte, PropertyStateEnum.ReadOnly));
-                                PrimaryKeySchema primaryKey = new PrimaryKeySchema(tableSchema, @string, list.ToArray());
+                                PrimaryKeySchema primaryKey = new PrimaryKeySchema(tableSchema, indexName, list.ToArray());
                                 tableSchema.PrimaryKey = primaryKey;
                             }
                             tableSchema.PrimaryKey.MemberColumns.Add(memberColumnSchema);
@@ -733,29 +732,29 @@ namespace SchemaExplorer
             }
             while (reader.Read())
             {
-                string @string = reader.GetString("ConstraintName");
-                string string2 = reader.GetString("PrimaryTableOwner");
-                string string3 = reader.GetString("PrimaryTableName");
-                string string4 = reader.GetString("PrimaryColumnName");
-                string string5 = reader.GetString("ForeignTableOwner");
-                string string6 = reader.GetString("ForeignTableName");
-                string string7 = reader.GetString("ForeignColumnName");
-                bool boolean = reader.GetBoolean("IsNotForReplication");
-                bool flag = reader.GetByte("DeleteReferentialAction") == 1;
-                bool flag2 = reader.GetByte("UpdateReferentialAction") == 1;
-                bool boolean2 = reader.GetBoolean("WithNoCheck");
-                if (!StringArrayHelper.IsAnyNullOrEmpty(@string, string3, string4, string6, string7))
+                string constraintName = reader.IsDBNull("ConstraintName") ? null : reader.GetString("ConstraintName");
+                string primaryTableOwner = reader.IsDBNull("PrimaryTableOwner") ? null : reader.GetString("PrimaryTableOwner");
+                string primaryTableName = reader.IsDBNull("PrimaryTableName") ? null : reader.GetString("PrimaryTableName");
+                string primaryColumnName = reader.IsDBNull("PrimaryColumnName") ? null : reader.GetString("PrimaryColumnName");
+                string foreignTableOwner = reader.IsDBNull("PrimaryColumnName") ? null : reader.GetString("ForeignTableOwner");
+                string foreignTableName = reader.IsDBNull("PrimaryColumnName") ? null : reader.GetString("ForeignTableName");
+                string foreignColumnName = reader.IsDBNull("PrimaryColumnName") ? null : reader.GetString("ForeignColumnName");
+                bool isNotForReplication = reader.IsDBNull("IsNotForReplication") ? false : reader.GetBoolean("IsNotForReplication");
+                bool deleteReferentialAction = reader.IsDBNull("DeleteReferentialAction") ? false : reader.GetByte("DeleteReferentialAction") == 1;
+                bool updateReferentialAction = reader.IsDBNull("UpdateReferentialAction") ? false : reader.GetByte("UpdateReferentialAction") == 1;
+                bool withNoCheck = reader.IsDBNull("WithNoCheck") ? false : reader.GetBoolean("WithNoCheck");
+                if (!StringArrayHelper.IsAnyNullOrEmpty(constraintName, primaryTableName, primaryColumnName, foreignTableName, foreignColumnName))
                 {
-                    string key = string.Format("{0}.{1}", TableKeySchema.FormatFullName(string2, string3, @string), SchemaObjectBase.FormatFullName(string5, string6));
+                    string key = string.Format("{0}.{1}", TableKeySchema.FormatFullName(primaryTableOwner, primaryTableName, constraintName), SchemaObjectBase.FormatFullName(foreignTableOwner, foreignTableName));
                     TableSchema tableSchema;
-                    if (!tables.TryGetValue(SchemaObjectBase.FormatFullName(string2, string3), out tableSchema))
+                    if (!tables.TryGetValue(SchemaObjectBase.FormatFullName(primaryTableOwner, primaryTableName), out tableSchema))
                     {
-                        tableSchema = databaseSchema.Tables[string2, string3];
+                        tableSchema = databaseSchema.Tables[primaryTableOwner, primaryTableName];
                     }
                     TableSchema tableSchema2;
-                    if (!tables.TryGetValue(SchemaObjectBase.FormatFullName(string5, string6), out tableSchema2))
+                    if (!tables.TryGetValue(SchemaObjectBase.FormatFullName(foreignTableOwner, foreignTableName), out tableSchema2))
                     {
-                        tableSchema2 = databaseSchema.Tables[string5, string6];
+                        tableSchema2 = databaseSchema.Tables[foreignTableOwner, foreignTableName];
                     }
                     if (tableSchema != null && tableSchema2 != null)
                     {
@@ -763,11 +762,11 @@ namespace SchemaExplorer
                         if (!dictionary.TryGetValue(key, out tableKeySchema))
                         {
                             list.Clear();
-                            list.Add(new ExtendedProperty("CS_CascadeDelete", flag, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                            list.Add(new ExtendedProperty("CS_CascadeUpdate", flag2, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                            list.Add(new ExtendedProperty("CS_IsNotForReplication", boolean, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                            list.Add(new ExtendedProperty("CS_WithNoCheck", boolean2, DbType.Boolean, PropertyStateEnum.ReadOnly));
-                            tableKeySchema = new TableKeySchema(@string, tableSchema2, tableSchema, list.ToArray());
+                            list.Add(new ExtendedProperty("CS_CascadeDelete", deleteReferentialAction, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                            list.Add(new ExtendedProperty("CS_CascadeUpdate", updateReferentialAction, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                            list.Add(new ExtendedProperty("CS_IsNotForReplication", isNotForReplication, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                            list.Add(new ExtendedProperty("CS_WithNoCheck", withNoCheck, DbType.Boolean, PropertyStateEnum.ReadOnly));
+                            tableKeySchema = new TableKeySchema(constraintName, tableSchema2, tableSchema, list.ToArray());
                             dictionary.Add(key, tableKeySchema);
                             if (populateTable)
                             {
@@ -781,9 +780,9 @@ namespace SchemaExplorer
                                 }
                             }
                         }
-                        MemberColumnSchema memberColumnSchema = new MemberColumnSchema(tableSchema.Columns[string4]);
+                        MemberColumnSchema memberColumnSchema = new MemberColumnSchema(tableSchema.Columns[primaryColumnName]);
                         tableKeySchema.PrimaryKeyMemberColumns.Add(memberColumnSchema);
-                        MemberColumnSchema memberColumnSchema2 = new MemberColumnSchema(tableSchema2.Columns[string7]);
+                        MemberColumnSchema memberColumnSchema2 = new MemberColumnSchema(tableSchema2.Columns[foreignColumnName]);
                         tableKeySchema.ForeignKeyMemberColumns.Add(memberColumnSchema2);
                     }
                 }
