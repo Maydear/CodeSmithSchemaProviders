@@ -285,7 +285,7 @@ namespace SchemaExplorer
             {
                 ColumnSchema columnSchema = schemaObject as ColumnSchema;
                 string commandText = string.Format(
-                    @"SELECT EXTRA, COLUMN_DEFAULT, COLUMN_TYPE
+                    @"SELECT EXTRA, COLUMN_DEFAULT, COLUMN_TYPE,COLUMN_COMMENT
                      FROM INFORMATION_SCHEMA.COLUMNS
                      WHERE TABLE_SCHEMA = '{0}' AND TABLE_NAME = '{1}' AND COLUMN_NAME = '{2}'", columnSchema.Table.Database.Name, columnSchema.Table.Name, columnSchema.Name);
                 using (DbConnection dbConnection = MySQLSchemaProvider.CreateConnection(connectionString))
@@ -306,6 +306,7 @@ namespace SchemaExplorer
                                 text2 = dataReader.GetString(1).ToUpper();
                             }
                             string text3 = dataReader.GetString(2).ToUpper();
+                            string textCOMMENT = dataReader.GetString(3).ToUpper();
                             bool flag2 = text.IndexOf("auto_increment") > -1;
                             list.Add(new ExtendedProperty("CS_IsIdentity", flag2, columnSchema.DataType));
                             if (flag2)
@@ -318,6 +319,7 @@ namespace SchemaExplorer
                             list.Add(new ExtendedProperty("CS_ColumnDefault", text2, DbType.String));
                             list.Add(new ExtendedProperty("CS_SystemType", text3, DbType.String));
                             list.Add(new ExtendedProperty("CS_ColumnType", text3, DbType.String));
+                            list.Add(new ExtendedProperty("CS_Description", textCOMMENT, DbType.String));
                             list.Add(new ExtendedProperty("CS_ColumnExtra", text.ToUpper(), DbType.String));
                         }
                         if (!dataReader.IsClosed)
@@ -347,6 +349,7 @@ namespace SchemaExplorer
                         {
                             string @string = dataReader2.GetString(1);
                             list.Add(new ExtendedProperty("CS_CreateTableScript", @string, DbType.String));
+                            list.Add(new ExtendedProperty("CS_CreateTableScript", @string, DbType.String));
                         }
                         if (!dataReader2.IsClosed)
                         {
@@ -356,6 +359,33 @@ namespace SchemaExplorer
                     if (dbConnection2.State != ConnectionState.Closed)
                     {
                         dbConnection2.Close();
+                    }
+                }
+                string commandTextTABLES = string.Format(
+                    @"SELECT TABLE_COMMENT
+                     FROM INFORMATION_SCHEMA.TABLES
+                     WHERE TABLE_SCHEMA = '{0}' AND TABLE_NAME = '{1}'", tableSchema.Database.Name, tableSchema.Name);
+                using (DbConnection dbConnection3 = MySQLSchemaProvider.CreateConnection(connectionString))
+                {
+                    dbConnection3.Open();
+                    DbCommand dbCommand2 = dbConnection3.CreateCommand();
+                    dbCommand2.CommandText = commandTextTABLES;
+                    dbCommand2.Connection = dbConnection3;
+                    using (IDataReader dataReader2 = dbCommand2.ExecuteReader(CommandBehavior.CloseConnection))
+                    {
+                        while (dataReader2.Read())
+                        {
+                            string textCOMMENT = dataReader2.GetString(0);
+                            list.Add(new ExtendedProperty("CS_Description", textCOMMENT, DbType.String));
+                        }
+                        if (!dataReader2.IsClosed)
+                        {
+                            dataReader2.Close();
+                        }
+                    }
+                    if (dbConnection3.State != ConnectionState.Closed)
+                    {
+                        dbConnection3.Close();
                     }
                 }
             }
