@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchemaExplorerTest", "test\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchemaExplorer.MySQLSchemaProvider", "src\SchemaExplorer.MySQLSchemaProvider\SchemaExplorer.MySQLSchemaProvider.csproj", "{428B5715-B8CD-4247-91F1-F7A021451822}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchemaExplorer.PostgreSQLSchemaProvider", "src\SchemaExplorer.PostgreSQLSchemaProvider\SchemaExplorer.PostgreSQLSchemaProvider.csproj", "{A2293919-5749-448B-A928-2EADA5D2C802}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{428B5715-B8CD-4247-91F1-F7A021451822}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{428B5715-B8CD-4247-91F1-F7A021451822}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{428B5715-B8CD-4247-91F1-F7A021451822}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2293919-5749-448B-A928-2EADA5D2C802}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2293919-5749-448B-A928-2EADA5D2C802}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2293919-5749-448B-A928-2EADA5D2C802}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2293919-5749-448B-A928-2EADA5D2C802}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
