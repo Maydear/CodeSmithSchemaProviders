@@ -83,7 +83,10 @@ namespace SchemaExplorer
             List<IndexSchema> list = new List<IndexSchema>();
             using (NpgsqlConnection npgsqlConnection = new NpgsqlConnection(connectionString))
             {
-                npgsqlConnection.Open();
+                if (npgsqlConnection.State != ConnectionState.Open)
+                {
+                    npgsqlConnection.Open();
+                }
                 string text = string.Format("select * from pg_catalog.pg_indexes where schemaname='public' and tablename = '{0}'", table.Name);
                 using (NpgsqlCommand npgsqlCommand = new NpgsqlCommand(text, npgsqlConnection))
                 {
@@ -93,6 +96,10 @@ namespace SchemaExplorer
                         {
                             string @string = npgsqlDataReader.GetString(2);
                             string text2 = string.Format("SELECT n.nspname AS schemaname, c.relname AS tablename, i.relname AS indexname, t.spcname AS \"tablespace\", a.attname as \"colname\", x.indisunique as \"unique\", x.indisprimary as \"primary\", x.indisclustered as \"clustered\" FROM pg_catalog.pg_index x JOIN pg_catalog.pg_class c ON c.oid = x.indrelid JOIN pg_catalog.pg_class i ON i.oid = x.indexrelid JOIN pg_catalog.pg_attribute a ON a.attrelid = i.relfilenode LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace LEFT JOIN pg_catalog.pg_tablespace t ON t.oid = i.reltablespace WHERE c.relkind = 'r'::\"char\" AND i.relkind = 'i'::\"char\" AND n.nspname='public' AND c.relname='{0}' AND i.relname= '{1}'", table.Name, @string);
+                            if (npgsqlConnection.State != ConnectionState.Open)
+                            {
+                                npgsqlConnection.Open();
+                            }
                             using (NpgsqlCommand npgsqlCommand2 = new NpgsqlCommand(text2, npgsqlConnection))
                             {
                                 using (NpgsqlDataReader npgsqlDataReader2 = npgsqlCommand2.ExecuteReader())
@@ -273,33 +280,26 @@ namespace SchemaExplorer
             PrimaryKeySchema result = null;
             using (NpgsqlConnection npgsqlConnection = new NpgsqlConnection(connectionString))
             {
-                npgsqlConnection.Open();
-                string text = string.Format("select constraint_name from information_schema.table_constraints where constraint_schema='public' and table_name='{0}' and constraint_type='PRIMARY KEY'", table.Name);
-
-                using (NpgsqlCommand npgsqlCommand = new NpgsqlCommand(text, npgsqlConnection))
+                var npgsqlCommand = npgsqlConnection.CreateCommand();
+                npgsqlCommand.CommandText = string.Format("select constraint_name from information_schema.table_constraints where constraint_schema='public' and table_name='{0}' and constraint_type='PRIMARY KEY'", table.Name);
+                if (npgsqlConnection.State != ConnectionState.Open)
                 {
-                    using (NpgsqlDataReader npgsqlDataReader = npgsqlCommand.ExecuteReader())
+                    npgsqlConnection.Open();
+                }
+                var constraint_name = npgsqlCommand.ExecuteScalar().ToString();
+
+                string ColumnName_sql = string.Format("select px.conname as ConstraintName, att.attname as ColumnName from pg_constraint px inner join pg_class home on (home.oid = px.conrelid) left join pg_attribute att on (att.attrelid = px.conrelid AND att.attnum = ANY(px.conkey)) where (home.relname = '{0}') and px.contype = 'p'", table.Name);
+
+                using (NpgsqlCommand npgsqlCommand2 = new NpgsqlCommand(ColumnName_sql, npgsqlConnection))
+                {
+                    using (NpgsqlDataReader npgsqlDataReader2 = npgsqlCommand2.ExecuteReader())
                     {
-                        while (npgsqlDataReader.Read())
+                        List<string> list = new List<string>();
+                        while (npgsqlDataReader2.Read())
                         {
-                            string text2 = string.Format("select px.conname as ConstraintName, att.attname as ColumnName from pg_constraint px inner join pg_class home on (home.oid = px.conrelid) left join pg_attribute att on (att.attrelid = px.conrelid AND att.attnum = ANY(px.conkey)) where (home.relname = '{0}') and px.contype = 'p'", table.Name);
-                            using (NpgsqlCommand npgsqlCommand2 = new NpgsqlCommand(text2, npgsqlConnection))
-                            {
-                                using (NpgsqlDataReader npgsqlDataReader2 = npgsqlCommand2.ExecuteReader())
-                                {
-                                    List<string> list = new List<string>();
-                                    while (npgsqlDataReader2.Read())
-                                    {
-                                        list.Add(npgsqlDataReader2.IsDBNull(1) ? string.Empty : npgsqlDataReader2.GetString(1));
-                                    }
-                                    result = new PrimaryKeySchema(table, npgsqlDataReader.GetString(0), list.ToArray());
-                                }
-                            }
+                            list.Add(npgsqlDataReader2.IsDBNull(1) ? string.Empty : npgsqlDataReader2.GetString(1));
                         }
-                        if (!npgsqlDataReader.IsClosed)
-                        {
-                            npgsqlDataReader.Close();
-                        }
+                        result = new PrimaryKeySchema(table, constraint_name, list.ToArray());
                     }
                 }
                 if (npgsqlConnection.State != ConnectionState.Closed)
@@ -399,9 +399,9 @@ namespace SchemaExplorer
                             string text2 = npgsqlDataReader.IsDBNull(5) ? string.Empty : npgsqlDataReader.GetString(5);
                             string type = npgsqlDataReader.IsDBNull(6) ? string.Empty : npgsqlDataReader.GetString(6);
                             list.Add(new ViewColumnSchema(view, npgsqlDataReader.GetString(0), PostgreSQLSchemaProvider.GetDbType(type), text2, size, precision, scale, allowDBNull, new ExtendedProperty[]
-							{
-								new ExtendedProperty("NpgsqlDbType", PostgreSQLSchemaProvider.GetNativeDbType(text2), DbType.String)
-							}));
+                            {
+                                new ExtendedProperty("NpgsqlDbType", PostgreSQLSchemaProvider.GetNativeDbType(text2), DbType.String)
+                            }));
                         }
                         if (!npgsqlDataReader.IsClosed)
                         {
@@ -502,12 +502,12 @@ namespace SchemaExplorer
                             if (!flag || database.IncludeFunctions)
                             {
                                 List<ExtendedProperty> list2 = new List<ExtendedProperty>
-								{
-									new ExtendedProperty("CS_Name", npgsqlDataReader.GetString(2), DbType.String, PropertyStateEnum.ReadOnly),
-									new ExtendedProperty("CS_IsScalarFunction", flag, DbType.Boolean, PropertyStateEnum.ReadOnly),
-									new ExtendedProperty("CS_IsProcedure", flag, DbType.Boolean, PropertyStateEnum.ReadOnly),
-									new ExtendedProperty("CS_IsTrigger", npgsqlDataReader.GetString(3).Equals("TRIGGER", StringComparison.InvariantCultureIgnoreCase), DbType.Boolean, PropertyStateEnum.ReadOnly)
-								};
+                                {
+                                    new ExtendedProperty("CS_Name", npgsqlDataReader.GetString(2), DbType.String, PropertyStateEnum.ReadOnly),
+                                    new ExtendedProperty("CS_IsScalarFunction", flag, DbType.Boolean, PropertyStateEnum.ReadOnly),
+                                    new ExtendedProperty("CS_IsProcedure", flag, DbType.Boolean, PropertyStateEnum.ReadOnly),
+                                    new ExtendedProperty("CS_IsTrigger", npgsqlDataReader.GetString(3).Equals("TRIGGER", StringComparison.InvariantCultureIgnoreCase), DbType.Boolean, PropertyStateEnum.ReadOnly)
+                                };
                                 list.Add(new CommandSchema(database, npgsqlDataReader.GetString(0), npgsqlDataReader.GetString(1), DateTime.MinValue, list2.ToArray()));
                             }
                         }
@@ -545,9 +545,9 @@ namespace SchemaExplorer
                             byte precision = npgsqlDataReader.IsDBNull(17) ? (byte)0 : npgsqlDataReader.GetByte(17);
                             string @string = npgsqlDataReader.GetString(8);
                             list.Add(new ParameterSchema(commandSchema, name, PostgreSQLSchemaProvider.GetParameterDirection(npgsqlDataReader.GetString(4)), PostgreSQLSchemaProvider.GetDbType(npgsqlDataReader.GetString(8)), @string, size, precision, scale, false, new ExtendedProperty[]
-							{
-								new ExtendedProperty("NpgsqlDbType", PostgreSQLSchemaProvider.GetNativeDbType(@string), DbType.String)
-							}));
+                            {
+                                new ExtendedProperty("NpgsqlDbType", PostgreSQLSchemaProvider.GetNativeDbType(@string), DbType.String)
+                            }));
                         }
                         if (!npgsqlDataReader.IsClosed)
                         {
@@ -597,14 +597,14 @@ namespace SchemaExplorer
                                         }
                                         string string2 = npgsqlDataReader2.GetString(2);
                                         list.Add(new CommandResultColumnSchema(command, npgsqlDataReader2.GetString(1), PostgreSQLSchemaProvider.GetDbType(string2), string2, 0, 0, 0, true, new ExtendedProperty[]
-										{
-											new ExtendedProperty("NpgsqlDbType", PostgreSQLSchemaProvider.GetNativeDbType(string2), DbType.String)
-										}));
+                                        {
+                                            new ExtendedProperty("NpgsqlDbType", PostgreSQLSchemaProvider.GetNativeDbType(string2), DbType.String)
+                                        }));
                                     }
                                     array = new CommandResultSchema[]
-									{
-										new CommandResultSchema(command, text2, list.ToArray())
-									};
+                                    {
+                                        new CommandResultSchema(command, text2, list.ToArray())
+                                    };
                                 }
                             }
                         }
