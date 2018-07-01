@@ -331,11 +331,33 @@ namespace SchemaExplorer
 
         public ExtendedProperty[] GetExtendedProperties(string connectionString, SchemaObjectBase schemaObject)
         {
-            List<ExtendedProperty> list = new List<ExtendedProperty>();
+
+            if (schemaObject is TableSchema)
+            {
+                TableSchema tableSchema = (TableSchema)schemaObject;
+                string text = $"select cast(obj_description(relfilenode,'pg_class') as varchar) as comment from pg_class where relname='{tableSchema.Name}';";
+                List<ExtendedProperty> list = new List<ExtendedProperty>();
+                using (NpgsqlConnection npgsqlConnection = new NpgsqlConnection(connectionString))
+                {
+                    npgsqlConnection.Open();
+                    
+                    using (NpgsqlCommand npgsqlCommand = new NpgsqlCommand(text, npgsqlConnection))
+                    {
+                        var comment = npgsqlCommand.ExecuteScalar();
+                        list.Add(ExtendedProperty.Readonly("CS_Description", comment?.ToString()));
+                    }
+                    if (npgsqlConnection.State != ConnectionState.Closed)
+                    {
+                        npgsqlConnection.Close();
+                    }
+                }
+                return list.ToArray();
+            }
             if (schemaObject is ColumnSchema)
             {
+                List<ExtendedProperty> list = new List<ExtendedProperty>();
                 ColumnSchema columnSchema = schemaObject as ColumnSchema;
-                string text = string.Format("select pg_get_serial_sequence(c.table_name, c.column_name) as EXTRA, COLUMN_DEFAULT, data_type \r\n                          from pg_tables t\r\n                          INNER JOIN information_schema.columns c on t.tablename = c.table_name\r\n                          WHERE schemaname = '{0}' \r\n                          AND table_name = '{1}'\r\n                          AND COLUMN_NAME = '{2}'\r\n                          order by ordinal_position", columnSchema.Table.Database.Name, columnSchema.Table.Name, columnSchema.Name);
+                string text = $"select pg_get_serial_sequence(a.table_name, a.column_name) as EXTRA,a.COLUMN_DEFAULT,a.data_type,c.DeText as description from information_schema.columns as a left join( select pg_attr.attname as colname,pg_constraint.conname as pk_name from pg_constraint inner join pg_class on pg_constraint.conrelid = pg_class.oid inner join pg_attribute pg_attr on pg_attr.attrelid = pg_class.oid and  pg_attr.attnum = pg_constraint.conkey[1] inner join pg_type on pg_type.oid = pg_attr.atttypid where pg_class.relname = '{columnSchema.Table.Name}' and pg_constraint.contype = 'p')as b on b.colname = a.column_name left join( select attname, description as DeText from pg_class left join pg_attribute pg_attr on pg_attr.attrelid = pg_class.oid left join pg_description pg_desc on pg_desc.objoid = pg_attr.attrelid and pg_desc.objsubid = pg_attr.attnum where pg_attr.attnum > 0 and pg_attr.attrelid = pg_class.oid and pg_class.relname = '{columnSchema.Table.Name}')as c on c.attname = a.column_name where table_schema = 'public' and table_name = '{columnSchema.Table.Name}' and COLUMN_NAME = '{columnSchema.Name}' order by ordinal_position; ";
                 using (NpgsqlConnection npgsqlConnection = new NpgsqlConnection(connectionString))
                 {
                     npgsqlConnection.Open();
@@ -348,6 +370,7 @@ namespace SchemaExplorer
                                 string text2 = dataReader.IsDBNull(0) ? string.Empty : dataReader.GetString(0).ToLower();
                                 string value = dataReader.IsDBNull(1) ? null : dataReader.GetString(1).ToUpper();
                                 string value2 = dataReader.GetString(2).ToUpper();
+                                string description = dataReader.GetString(3);
                                 bool flag = !string.IsNullOrEmpty(text2);
                                 list.Add(new ExtendedProperty("CS_IsIdentity", flag, columnSchema.DataType));
                                 if (flag)
@@ -358,6 +381,7 @@ namespace SchemaExplorer
                                 list.Add(new ExtendedProperty("CS_Default", value, DbType.String));
                                 list.Add(new ExtendedProperty("CS_SystemType", value2, DbType.String));
                                 list.Add(new ExtendedProperty("CS_Sequence", text2.ToUpper(), DbType.String));
+                                list.Add(ExtendedProperty.Readonly("CS_Description", description?.ToString()));
                             }
                             if (!dataReader.IsClosed)
                             {
@@ -370,9 +394,16 @@ namespace SchemaExplorer
                         npgsqlConnection.Close();
                     }
                 }
+                return list.ToArray();
             }
-            return list.ToArray();
+
+            return new ExtendedProperty[0];
+
+            
+
+            
         }
+
 
         public void SetExtendedProperties(string connectionString, SchemaObjectBase schemaObject)
         {
