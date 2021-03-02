@@ -17,4 +17,4 @@ using System.Runtime.Versioning;
 [assembly: NeutralResourcesLanguage("en-US")]
 [assembly: AssemblyTitle("SchemaExplorer.MySQLSchemaProvider")]
 [assembly: AssemblyDescription("SchemaExplorer is a .NET schema discovery API.")]
-[assembly: TargetFramework(".NETFramework,Version=v4.6.2", FrameworkDisplayName = ".NET Framework 4.6.2")]
+//[assembly: TargetFramework(".NETFramework,Version=v4.6.2", FrameworkDisplayName = ".NET Framework 4.6.2")]

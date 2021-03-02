@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace SchemaExplorer
 {
-    public class MySQLSchemaProvider : IDbSchemaProvider, INamedObject
+    public class MySQLSchemaProvider : IDbSchemaProvider, CodeSmith.Core.Collections.INamedObject
     {
         public string Name { get { return "MySQLSchemaProvider"; } }
 
@@ -306,7 +306,7 @@ namespace SchemaExplorer
                                 text2 = dataReader.GetString(1).ToUpper();
                             }
                             string text3 = dataReader.GetString(2).ToUpper();
-                            string textCOMMENT = dataReader.GetString(3).ToUpper();
+                            string textCOMMENT = dataReader.GetString(3);
                             bool flag2 = text.IndexOf("auto_increment") > -1;
                             list.Add(new ExtendedProperty("CS_IsIdentity", flag2, columnSchema.DataType));
                             if (flag2)
@@ -649,7 +649,32 @@ namespace SchemaExplorer
 
         public ViewSchema[] GetViews(string connectionString, DatabaseSchema database)
         {
-            throw new NotImplementedException();
+            string commandText = string.Format("SELECT TABLE_NAME, '' OWNER, CREATE_TIME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '{0}' AND TABLE_TYPE = 'VIEW' ORDER BY 1", database.Name);
+            List<ViewSchema> list = new List<ViewSchema>();
+            using (DbConnection dbConnection = MySQLSchemaProvider.CreateConnection(connectionString))
+            {
+                dbConnection.Open();
+                DbCommand dbCommand = dbConnection.CreateCommand();
+                dbCommand.CommandText = commandText;
+                dbCommand.Connection = dbConnection;
+                using (IDataReader dataReader = dbCommand.ExecuteReader(CommandBehavior.CloseConnection))
+                {
+                    while (dataReader.Read())
+                    {
+                        DateTime dateTime = (!dataReader.IsDBNull(2)) ? dataReader.GetDateTime(2) : DateTime.MinValue;
+                        list.Add(new ViewSchema(database, dataReader.GetString(0), dataReader.GetString(1), dateTime));
+                    }
+                    if (!dataReader.IsClosed)
+                    {
+                        dataReader.Close();
+                    }
+                }
+                if (dbConnection.State != ConnectionState.Closed)
+                {
+                    dbConnection.Close();
+                }
+            }
+            return list.ToArray();
         }
 
         public string GetViewText(string connectionString, ViewSchema view)
@@ -683,7 +708,7 @@ namespace SchemaExplorer
 
         public void SetExtendedProperties(string connectionString, SchemaObjectBase schemaObject)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("This method has not been implemented");
         }
     }
 }

@@ -30,9 +30,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CodeSmith.Core, Version=1.1.0.0, Culture=neutral, PublicKeyToken=9fd61cdb91609a7a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\soft\CodeSmith\v7.0\bin\CodeSmith.Core.dll</HintPath>
+    <Reference Include="CodeSmith.Core">
+      <HintPath>..\..\libs\CodeSmith.Core.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Npgsql.2.2.7\lib\net45\Mono.Security.dll</HintPath>
@@ -40,9 +39,8 @@
     <Reference Include="Npgsql, Version=2.2.7.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Npgsql.2.2.7\lib\net45\Npgsql.dll</HintPath>
     </Reference>
-    <Reference Include="SchemaExplorer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=9fd61cdb91609a7a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\soft\CodeSmith\v7.0\AddIns\SchemaExplorer.dll</HintPath>
+    <Reference Include="SchemaExplorer">
+      <HintPath>..\..\libs\SchemaExplorer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
